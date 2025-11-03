@@ -1,1 +1,100 @@
-hi
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Sleep Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-sky-900 to-indigo-900 text-white flex flex-col items-center justify-center min-h-screen">
+
+  <h1 class="text-4xl font-bold mb-8">😴 Sleep Tracker</h1>
+
+  <div class="space-x-6 mb-8">
+    <button id="sleepBtn" class="bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-xl font-semibold">Sleep</button>
+    <button id="wakeBtn" class="bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-3 rounded-xl font-semibold">Wake Up</button>
+  </div>
+
+  <div class="bg-white/10 p-6 rounded-2xl shadow-lg w-96">
+    <h2 class="text-2xl font-semibold mb-4">🕒 Calculer mon temps de sommeil</h2>
+    
+    <label class="block mb-2">Heure de coucher :</label>
+    <input type="time" id="bedTime" class="text-black rounded-lg w-full mb-4 p-2">
+
+    <label class="block mb-2">Heure de réveil :</label>
+    <input type="time" id="wakeTime" class="text-black rounded-lg w-full mb-4 p-2">
+
+    <div class="flex justify-between">
+      <button id="nowBed" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg">Maintenant (Coucher)</button>
+      <button id="nowWake" class="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-lg">Maintenant (Réveil)</button>
+    </div>
+
+    <button id="calcBtn" class="mt-4 w-full bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg font-semibold">Calculer</button>
+
+    <p id="result" class="mt-4 text-center text-lg font-semibold"></p>
+  </div>
+
+  <script>
+    const sleepWebhook = "https://discord.com/api/webhooks/1435040337771888772/WHnGVUi9X9VvmveHFHSLENqc0TokAX9pxJGvJ81YnUBsLZ_Sz04w8UnPbe90YuQ6wScc";
+    const wakeWebhook = "https://discord.com/api/webhooks/1435040499101601963/YQHDhvN3Qu_i-n1XR9a0oOF5yB8WTf2uP13oMD6wHzAYW-Q9ZhiYB_uv5xxfSRPYzpEh";
+
+    function sendToDiscord(webhook, content) {
+      fetch(webhook, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ content })
+      });
+    }
+
+    // Sleep
+    document.getElementById("sleepBtn").addEventListener("click", () => {
+      const now = new Date();
+      const wake = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+      const msg = `😴 **Heure de coucher :** ${now.toLocaleTimeString('fr-FR')}\
+\n🕗 **Heure de réveil conseillée (dans 8h) :** ${wake.toLocaleTimeString('fr-FR')}`;
+      sendToDiscord(sleepWebhook, msg);
+      alert("Dors bien 😴 ! L'heure de réveil recommandée a été envoyée sur Discord.");
+    });
+
+    // Wake up
+    document.getElementById("wakeBtn").addEventListener("click", () => {
+      const now = new Date();
+      const msg = `🌞 **Heure de réveil :** ${now.toLocaleTimeString('fr-FR')}`;
+      sendToDiscord(wakeWebhook, msg);
+      alert("Bonjour ☀️ ! L'heure de réveil a été envoyée sur Discord.");
+    });
+
+    // Calcul manuel
+    document.getElementById("calcBtn").addEventListener("click", () => {
+      const bed = document.getElementById("bedTime").value;
+      const wake = document.getElementById("wakeTime").value;
+      if (!bed || !wake) return alert("Remplis les deux heures !");
+
+      const bedDate = new Date(`1970-01-01T${bed}:00`);
+      const wakeDate = new Date(`1970-01-01T${wake}:00`);
+      if (wakeDate < bedDate) wakeDate.setHours(wakeDate.getHours() + 24);
+
+      const diffMs = wakeDate - bedDate;
+      const hours = Math.floor(diffMs / 1000 / 60 / 60);
+      const minutes = Math.floor((diffMs / 1000 / 60) % 60);
+
+      let result = `⏰ Temps de sommeil : ${hours}h ${minutes}min. `;
+      if (hours < 7) result += "😔 Pas assez de sommeil...";
+      else if (hours === 8) result += "💤 Parfait !";
+      else if (hours > 8) result += "🌟 Excellent, tu es bien reposé !";
+
+      document.getElementById("result").textContent = result;
+    });
+
+    // Boutons "Maintenant"
+    document.getElementById("nowBed").addEventListener("click", () => {
+      const now = new Date();
+      document.getElementById("bedTime").value = now.toTimeString().slice(0,5);
+    });
+
+    document.getElementById("nowWake").addEventListener("click", () => {
+      const now = new Date();
+      document.getElementById("wakeTime").value = now.toTimeString().slice(0,5);
+    });
+  </script>
+</body>
+</html>
